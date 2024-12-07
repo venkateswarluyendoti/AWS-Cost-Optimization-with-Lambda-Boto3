@@ -30,7 +30,15 @@ Task:1
 >> This is the way how you can manage the cloud cost optimization in our aws accounts as a devops and cloud engineer.
 
 Task:2
+ >> Go to ec2 dashboard and go to volumes and click on create volume --> size(1GB) --> create volume.
+ >> Go to ec2 dashboard and click on snapshots --> create snapshots --> VolumeID(choose) --> create snapshot --> refresh page.
+ >> Go to lambda function and click on Test --> status(succeeded) --> go to ec2 dashboard and click on refresh then we can observe only snapshot is deleted but voulume is constant why because we have written this in such a way that if the snapshot belongs to a volume that is not attached to any ec2 instance then delete snapshot, if the snapshot is still if it belongs to volume that is not attached to any ec2 instance just go ahead and delete it.
 
+
+### SCOPE:
+
+>> We can use the same example create 100 snapshots here and all the 100 snapshots will be deleted in one single go.
+>> similar we will write lambda functions for s3 buckets we will write lambda functions for RDS instances, eks instances whatever we would like do in our requirement.
 
 
 
