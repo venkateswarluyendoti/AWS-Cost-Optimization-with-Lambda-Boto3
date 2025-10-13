@@ -146,26 +146,25 @@ def lambda_handler(event, context):
     return {'statusCode': 200, 'body': 'Snapshots cleaned'}
 
 
-
-
 Upload Tips: Paste directly in Lambda editor > Handler: snapshot_cleaner.lambda_handler > Runtime: Python 3.10 > Deploy.
-Additional Testing (Task 2 from Original)
+
+# Additional Testing (Task 2 from Original)
 Test with a detached volume to understand behavior.
 
-Create Detached Volume
+1. Create Detached Volume
 
 EC2 > Volumes > Create volume > Size: 1GB > Create volume.
 Screenshot: [Insert screenshot of volume creation here]
 
 
-Create Snapshot
+2. Create Snapshot
 
 EC2 > Snapshots > Create snapshot > Select new volume > Create.
 Refresh to confirm.
 Screenshot: [Insert screenshot of snapshot creation here]
 
 
-Test Lambda
+3. Test Lambda
 
 Lambda > Test > Run.
 Logs: Success; snapshot deleted, volume persists (not attached).
@@ -174,6 +173,7 @@ Screenshot: [Insert screenshot of logs for detached volume test here]
 
 
 Why: Code deletes snapshots tied to unattached volumes, leaving volumes intact.
+
 Scope and Extensions
 
 Scale Up: Create 100 snapshots—deleted in one run.
