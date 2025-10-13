@@ -268,6 +268,6 @@ Why: Code deletes snapshots tied to unattached volumes, leaving volumes intact.
 ## Repository Files
 
 - snapshot_cleaner.py: [Enhanced Lambda Code (snapshot_cleaner.py)].
-- README.md: [AWS Cloud Cost Optimization - Identifying Stale Resources].
+- README.md: [AWS-Cost-Optimization-with-Lambda-Boto3].
 
 
