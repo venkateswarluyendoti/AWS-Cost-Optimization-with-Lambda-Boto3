@@ -1,8 +1,8 @@
 # AWS Cloud Cost Optimization - Identifying Stale Resources
 
-[![GitHub Repo](https://img.shields.io/badge/GitHub-Repo-blue?logo=github)](https://github.com/venkateswarluyendoti/AWS-Cost-Optimization-with-Lambda-Boto3)  
+[![GitHub Repo](https://img.shields.io/badge/GitHub-Repo-blue?logo=github)](https://github.com/venkateswarluyendoti/AWS-Cost-Optimization-Lambda-Terraform)
 **Based on and extended from Abhishek Veeramalla's AWS Cost Optimization series.**  
-This project uses AWS Lambda and Boto3 to identify and delete stale EBS snapshots (no longer tied to active EC2 instances), optimizing storage costs. The original approach tests with one instance for simplicity. We've extended it to handle multiple instances (e.g., 5 snapshots deleted at once) to demonstrate scalability and robustness.
+This project leverages **AWS Lambda and Boto3 to identify** and **delete stale EBS snapshots** (those not associated with active EC2 instances), optimizing storage costs (~$0.05/GB/month). The original approach by **Abhishek Veeramalla** focuses on testing with a **single instance** for simplicity. We’ve extended it to handle **multiple instances** (e.g., deleting 5 snapshots at once) to demonstrate **scalability and robustness**. Additionally, we’ve incorporated **Terraform to automate the provisioning of AWS resources, including Lambda functions, IAM roles, and EventBridge triggers, ensuring a reproducible and efficient setup for cost optimization**.
 
 ## Project Overview
 - **Goal**: Automate stale EBS snapshot cleanup to save costs (~$0.05/GB/month).
@@ -113,10 +113,10 @@ Start with a single EC2 instance to learn the core concept.
    <img width="1919" height="730" alt="Screenshot 2025-10-13 112414" src="https://github.com/user-attachments/assets/5e6dc7c6-e166-4493-bfef-22dc7d09c223" />
 
 
-**!Note**: Don’t delete this setup (snapshots/volumes) until cleanup to avoid confusion; it incurs costs—delete later.
+**!Note**: **"Keep snapshots and volumes active until the cleanup phase to ensure smooth testing and avoid confusion. These resources incur AWS charges (e.g., approximately $0.05/GB/month for snapshots), so delete them during cleanup to prevent unnecessary costs"**.
 
 ## Multi-Instance Testing (Extended Approach)
-Scale to 5 instances/snapshots to test bulk deletion and scalability.
+- **Scale to 5 instances/snapshots to test bulk deletion and scalability**.
 
 ### Implementation Steps
 1. **Create 5 EC2 Instances**  
@@ -216,28 +216,496 @@ def lambda_handler(event, context):
 
 ### Upload Tips: Paste directly in Lambda editor > Handler: snapshot_cleaner.lambda_handler > Runtime: Python 3.10 > Deploy.
 
+## Infrastructure as Code with Terraform
+
+This section provides an alternative to the manual AWS Console steps by using Terraform to automate the provisioning of AWS resources (Lambda function, IAM roles, policies, and EventBridge trigger). Terraform ensures a reproducible, scalable setup and reduces manual errors.
+
+### Why Use Terraform?
+- **Automation**: Eliminates manual AWS Console operations.
+- **Reproducibility**: Creates consistent environments for testing or production.
+- **Cost Management**: Easily destroy resources to avoid unnecessary charges.
+- **Scalability**: Supports single or multi-instance setups with minimal changes.
+
+### Prerequisites
+1. An Ubuntu/Linux system (e.g., local machine or AWS EC2 Ubuntu instance).
+2. AWS CLI configured with an IAM user (`aws-cost-optimization`) having sufficient permissions.
+3. Terraform installed (version >= 1.9.x).
+4. Clone this repository and navigate to the `terraform/` directory.
+
+### Installation Steps
+Follow these steps to set up AWS CLI and Terraform on an Ubuntu/Linux system.
+
+#### 1. Install AWS CLI (v2)
+```bash
+# Update system
+sudo apt update -y
+sudo apt upgrade -y
+
+# Install required packages
+sudo apt install unzip curl -y
+
+# Download AWS CLI v2 package
+curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
+
+# Unzip the installer
+unzip awscliv2.zip
+
+# Run the installation script
+sudo ./aws/install
+
+# Verify installation
+aws --version
+```
+Expected output: aws-cli/2.x.x Python/3.x.x Linux/amd64
+#### 2. Configure AWS CLI
+Create an IAM user in the AWS Console:
+
+- **Username**: aws-cost-optimization
+- **Access**: Programmatic access (to generate Access Key ID and Secret Access Key)
+- **Permissions**: Attach policies as described in the troubleshooting section below.
+
+```bash
+aws configure
+```
+**Provide:**
+
+- **AWS Access Key ID**: <your-access-key>
+- **AWS Secret Access Key**: <your-secret-key>
+- **Default region name**: us-east-1 (or your preferred region, e.g., ap-south-1)
+- **Default output format**: json
+
+#### 3. Install Terraform
+
+```bash
+# Update system and install dependencies
+sudo apt-get update && sudo apt-get install -y gnupg software-properties-common curl
+
+# Add HashiCorp’s official GPG key
+curl -fsSL https://apt.releases.hashicorp.com/gpg | sudo apt-key add -
+
+# Add the HashiCorp repository
+sudo apt-add-repository "deb [arch=amd64] https://apt.releases.hashicorp.com $(lsb_release -cs) main"
+
+# Install Terraform
+sudo apt-get update && sudo apt-get install terraform -y
+
+# Verify installation
+terraform -version
+```
+  - **Expected output:** Terraform v1.9.x
+
+## Terraform Setup
+
+1. **Navigate to the Terraform Directory:**
+```bash
+cd terraform/
+```
+2. **Prepare the Lambda ZIP File:**
+
+* Ensure snapshot_cleaner.py is in the terraform/ directory.
+* Create a ZIP file for the Lambda function:
+```bash
+zip snapshot_cleaner.zip snapshot_cleaner.py
+```
+3. **Terraform Commands:**
+```bash
+# Initialize Terraform
+terraform init
+
+# Validate configuration
+terraform validate
+
+# Preview changes
+terraform plan
+
+# Apply the configuration
+terraform apply
+```
+Type **yes** to confirm. This creates:
+
+<img width="1919" height="542" alt="Screenshot 2025-10-14 102447" src="https://github.com/user-attachments/assets/8b6bb4b6-e2cd-45a3-a92a-47448229ecec" />
+
+<img width="1916" height="920" alt="Screenshot 2025-10-14 102638" src="https://github.com/user-attachments/assets/863dcd15-2c9f-4a24-aba3-3099d9b7d79f" />
+
+
+<img width="1920" height="1080" alt="Screenshot (286)" src="https://github.com/user-attachments/assets/eb803dab-319d-424a-a0a4-3fb17586f895" />
+
+<img width="1920" height="1080" alt="Screenshot (287)" src="https://github.com/user-attachments/assets/a61f3822-d8f0-4da2-b2a3-3382c3beec97" />
+
+<img width="1920" height="1080" alt="Screenshot (288)" src="https://github.com/user-attachments/assets/541f77a7-8ce9-4cc9-8e65-54220ad8177d" />
+
+
+
+* IAM role (**cost-optimization-ebs-snapshot-role**) with necessary policies.
+* Lambda function (**cost-optimization-ebs-snapshot**) with **snapshot_cleaner.py**.
+* EventBridge rule (**daily-snapshot-cleanup**) to trigger Lambda daily.
+
+## Terraform Configuration
+* The Terraform configuration is defined in **main.tf**. Below is the complete code, updated to use the ZIP file for the Lambda function:
+
+```bash
+provider "aws" {
+  region = "us-east-1"  # Adjust to your region
+}
+
+# IAM Role for Lambda
+resource "aws_iam_role" "lambda_role" {
+  name = "cost-optimization-ebs-snapshot-role"
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Action = "sts:AssumeRole"
+      Effect = "Allow"
+      Principal = { Service = "lambda.amazonaws.com" }
+    }]
+  })
+}
+
+# Policy for EBS Operations
+resource "aws_iam_role_policy" "ebs_policy" {
+  role = aws_iam_role.lambda_role.id
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Action = ["ec2:DescribeSnapshots", "ec2:DeleteSnapshot", "ec2:DescribeVolumes", "ec2:DescribeInstances"]
+      Effect = "Allow"
+      Resource = "*"
+    }]
+  })
+}
+
+# Attach Lambda Basic Execution Role
+resource "aws_iam_role_policy_attachment" "lambda_basic_execution" {
+  role       = aws_iam_role.lambda_role.name
+  policy_arn = "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
+}
+
+# Lambda Function
+resource "aws_lambda_function" "cost_optimization" {
+  function_name = "cost-optimization-ebs-snapshot"
+  role          = aws_iam_role.lambda_role.arn
+  handler       = "snapshot_cleaner.lambda_handler"
+  runtime       = "python3.10"
+  timeout       = 10
+  filename      = "snapshot_cleaner.zip"  # Use the ZIP file
+  source_code_hash = filebase64sha256("snapshot_cleaner.zip")  # Hash of the ZIP
+}
+
+# EventBridge Trigger (Daily)
+resource "aws_cloudwatch_event_rule" "daily_trigger" {
+  name                = "daily-snapshot-cleanup"
+  schedule_expression = "cron(0 0 * * ? *)"
+}
+
+resource "aws_cloudwatch_event_target" "lambda_target" {
+  rule      = aws_cloudwatch_event_rule.daily_trigger.name
+  target_id = "lambda"
+  arn       = aws_lambda_function.cost_optimization.arn
+}
+
+resource "aws_lambda_permission" "allow_eventbridge" {
+  statement_id  = "AllowExecutionFromEventBridge"
+  action        = "lambda:InvokeFunction"
+  function_name = aws_lambda_function.cost_optimization.function_name
+  principal     = "events.amazonaws.com"
+  source_arn    = aws_cloudwatch_event_rule.daily_trigger.arn
+}
+```
+
+### Testing the Setup
+
+1. **Apply Terraform**:
+
+- Run terraform apply to create the resources.
+- Verify in the AWS Console:
+
+- **IAM > Roles:** cost-optimization-ebs-snapshot-role **exists**.
+- **Lambda > Functions:** cost-optimization-ebs-snapshot **exists**.
+- **CloudWatch > Rules:** daily-snapshot-cleanup **exists**.
+
+2. **Test Lambda**:
+
+- Manually trigger the **Lambda function** in the **AWS Console** (Lambda > Test).
+- Check **CloudWatch logs** for output (e.g., "Deleted stale snapshot: snap-xxx").
+- Verify **snapshots** are **deleted** (EC2 > Snapshots).
+
+<img width="1917" height="731" alt="Screenshot 2025-10-14 121446" src="https://github.com/user-attachments/assets/053b8148-2f37-4de0-8eac-70f2e5d3657a" />
+
+<img width="1906" height="599" alt="Screenshot 2025-10-14 121626" src="https://github.com/user-attachments/assets/3651a5eb-5a2c-4cb8-b400-6391476a4fd0" />
+
+<img width="1919" height="564" alt="Screenshot 2025-10-14 121701" src="https://github.com/user-attachments/assets/e922b938-af59-4909-81f3-671a8212fbc8" />
+
+
+<img width="1919" height="771" alt="Screenshot 2025-10-14 121745" src="https://github.com/user-attachments/assets/8b672bba-feb8-4898-a943-d7793cdfeeb5" />
+
+
+<img width="1913" height="739" alt="Screenshot 2025-10-14 124759" src="https://github.com/user-attachments/assets/829ce37f-d632-4689-8879-06f19b9b9301" />
+
+
+
+
+3. **Create Test Resources**:
+
+- To test snapshot cleanup, create EC2 instances and snapshots manually (as described in the "Single-Instance Testing" or "Multi-Instance Testing" sections) or extend the Terraform configuration to include EC2 resources (see "Scope and Extensions").
+
+
+## Troubleshooting Common Issues
+
+Below are common Terraform errors and their solutions, based on observed issues during setup.
+1. **IAM Role Creation Access Denied (403)**
+- **Error:** creating IAM Role (cost-optimization-ebs-snapshot-role): ... AccessDenied: User is not authorized to perform: iam:CreateRole.
+
+- **Solution:**
+The **aws-cost-optimization** IAM user lacks **iam:CreateRole** permission.
+Attach a policy to the user:
+
+```json
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Action": [
+        "iam:CreateRole",
+        "iam:AttachRolePolicy",
+        "iam:PutRolePolicy"
+      ],
+      "Resource": "*"
+    }
+  ]
+}
+```
+* Steps:
+- Go to AWS Console > IAM > Users > aws-cost-optimization > Permissions > Add permissions.
+- Create a new policy with the above JSON (name: TerraformIAMAccess).
+- Attach the policy and retry terraform apply.
+
+2. **IAM Role and EventBridge Rule Access Denied (403)**
+- **Error:** reading IAM Role ... AccessDenied: User is not authorized to perform: iam:GetRole and Error: waiting for EventBridge Rule ... AccessDeniedException: User is not authorized to perform: events:DescribeRule.
+- **Solution:**
+Update the IAM user’s policy to include **iam:GetRole** and **events:DescribeRule**:
+
+```json
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Action": [
+        "iam:CreateRole",
+        "iam:AttachRolePolicy",
+        "iam:PutRolePolicy",
+        "iam:GetRole",
+        "lambda:CreateFunction",
+        "lambda:InvokeFunction",
+        "lambda:GetFunction",
+        "events:PutRule",
+        "events:PutTargets",
+        "events:DescribeRule",
+        "lambda:AddPermission"
+      ],
+      "Resource": "*"
+    }
+  ]
+}
+```
+* Steps:
+- Update or create a policy (e.g., TerraformLambdaEventBridgeFullAccess).
+- Attach to the aws-cost-optimization user.
+- Run terraform apply.
+
+3. **IAM Role Deletion Access Denied (403)**
+- **Error:** deleting IAM Role ... AccessDenied: User is not authorized to perform: iam:ListInstanceProfilesForRole
+- **Solution:**
+- Add iam:ListInstanceProfilesForRole, **iam:DeleteRole**, and **events:DeleteRule** to the IAM user’s policy:
+
+```json
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Action": [
+        "iam:CreateRole",
+        "iam:AttachRolePolicy",
+        "iam:PutRolePolicy",
+        "iam:GetRole",
+        "iam:ListInstanceProfilesForRole",
+        "iam:DeleteRole",
+        "lambda:CreateFunction",
+        "lambda:InvokeFunction",
+        "lambda:GetFunction",
+        "events:PutRule",
+        "events:PutTargets",
+        "events:DescribeRule",
+        "events:DeleteRule",
+        "lambda:AddPermission"
+      ],
+      "Resource": "*"
+    }
+  ]
+}
+```
+* Steps:
+- Update the policy and attach it.
+- If the role persists, manually delete it (IAM > Roles > cost-optimization-ebs-snapshot-role > Delete).
+- Run terraform destroy and then terraform apply.
+
+4. **IAM Role Already Exists (409)**
+- **Error:** creating IAM Role ... EntityAlreadyExists: Role with name cost-optimization-ebs-snapshot-role already exists
+- **Solution:**
+- **Option 1 (Recommended)**: Delete the existing role:
+
+1. Go to AWS Console > IAM > Roles > cost-optimization-ebs-snapshot-role > **Delete**.
+2. Run terraform apply.
+
+- **Option 2**: Import the role into Terraform state:
+```bash
+terraform import aws_iam_role.lambda_role cost-optimization-ebs-snapshot-role
+```
+- Then run terraform apply.
+
+- **Option 3**: Change the role name in main.tf (e.g., cost-optimization-ebs-snapshot-role-v2) and update references.
+
+5. **Lambda Function ZIP Upload Error**
+**Error:** creating Lambda Function ... InvalidParameterValueException: Could not unzip uploaded file
+**Solution:**
+
+- The Lambda function requires a ZIP file (snapshot_cleaner.zip) instead of the raw .py file.
+- Steps:
+
+1. Install the **zip** utility:
+```bash
+sudo apt install zip
+```
+2. Create the ZIP file:
+```bash
+zip snapshot_cleaner.zip snapshot_cleaner.py
+```
+3. Verify main.tf uses the ZIP file:
+```bash
+resource "aws_lambda_function" "cost_optimization" {
+  function_name = "cost-optimization-ebs-snapshot"
+  role          = aws_iam_role.lambda_role.arn
+  handler       = "snapshot_cleaner.lambda_handler"
+  runtime       = "python3.10"
+  timeout       = 10
+  filename      = "snapshot_cleaner.zip"
+  source_code_hash = filebase64sha256("snapshot_cleaner.zip")
+}
+```
+4. Run terraform apply.
+- Verify: Check Lambda > cost-optimization-ebs-snapshot in the AWS Console and test the function.
+
+6. **Missed terraform destroy (Critical for Cost Management)**
+**Issue:** Forgetting to run terraform destroy before terminating EC2 instances or other resources can lead to orphaned resources, incurring unexpected costs.
+**Impact:**
+- Resources like Lambda functions, IAM roles, and EventBridge rules remain active, potentially increasing your AWS bill.
+- Example costs: Lambda (free tier limited), EventBridge rules (minimal but cumulative), IAM roles (no direct cost but security risk if unused).
+**Solution:**
+Always run terraform destroy after completing your work:
+
+```bash
+terraform destroy
+```
+Type **yes** to confirm.
+
+- Verify resource deletion in the AWS Console:
+  - IAM > Roles > Ensure cost-optimization-ebs-snapshot-role is gone.
+  - Lambda > Functions > Ensure cost-optimization-ebs-snapshot is gone.
+  - CloudWatch > Rules > Ensure daily-snapshot-cleanup is gone.
+- If resources persist, manually delete them to avoid costs.
+
+
+## Important Notes
+
+- **Region**: Update the region in **main.tf** to match your **AWS CLI configuration** (e.g., **us-east-1** if specified during aws configure).
+- **EC2 Resources**: The provided Terraform code focuses on **Lambda** and **EventBridge**. To include EC2 instances and snapshots, extend **main.tf** as shown in the previous response (e.g., aws_instance, aws_ebs_snapshot).
+- **Cost Management**: Always run **terraform destroy** immediately after testing to avoid charges, especially for **EC2 instances and snapshots (~$0.05/GB/month)**.
+- **IAM Permissions**: The **aws-cost-optimization** user needs a comprehensive policy for Terraform operations. Use the final policy from **Troubleshoot #3** for all necessary permissions.
+
+## Extending Terraform for EC2 and Snapshots
+- To fully automate the single- or multi-instance testing scenarios, add the following to main.tf:
+
+```bash
+# EC2 Instances
+resource "aws_instance" "test_ec2" {
+  count         = var.instance_count
+  ami           = var.ami_id
+  instance_type = var.instance_type
+  key_name      = var.key_name
+  root_block_device {
+    volume_size           = 8
+    volume_type           = "gp3"
+    delete_on_termination = true
+  }
+  tags = {
+    Name = "test-instance-${count.index + 1}"
+  }
+}
+
+# EBS Snapshots
+resource "aws_ebs_snapshot" "test_snapshot" {
+  count     = var.instance_count
+  volume_id = aws_instance.test_ec2[count.index].root_block_device_volume_id
+  description = "Test snapshot for volume ${aws_instance.test_ec2[count.index].root_block_device_volume_id}"
+}
+
+# Variables
+variable "instance_count" {
+  description = "Number of EC2 instances to create"
+  default     = 5
+}
+
+variable "ami_id" {
+  description = "AMI ID for Ubuntu Server 24.04 LTS"
+  default     = "ami-0c55b159cbfafe1f0" # Replace with correct AMI ID for your region
+}
+
+variable "instance_type" {
+  description = "EC2 instance type"
+  default     = "t2.micro"
+}
+
+variable "key_name" {
+  description = "Name of the EC2 key pair"
+  default     = null # Set to your key pair name or leave null
+}
+```
+- Add these to a **variables.tf** file for modularity.
+
+## Verification
+- To ensure the **Terraform integration** works:
+
+  - Clone the repository and navigate to **terraform/**.
+  - Create **snapshot_cleaner.zip** as described.
+  - Run **terraform init, terraform validate, terraform plan, and terraform apply**.
+  - Verify resources in the AWS Console (**Lambda, IAM, CloudWatch**).
+  - Test the Lambda function and confirm snapshot cleanup (create test snapshots manually or via Terraform).
+  - Run **terraform destroy** and verify all resources are deleted.
+
 ## Additional Testing (Task 2 from Original)
-Test with a detached volume to understand behavior.
+Test with a detached volume to understand behaviour.
 
-1. Create Detached Volume
+1. **Create Detached Volume**
 
-EC2 > Volumes > Create volume > Size: 1GB > Create volume.
+  - EC2 > Volumes > Create volume > Size: 1GB > Create volume.
 
 <img width="1919" height="731" alt="Screenshot 2025-10-13 105025" src="https://github.com/user-attachments/assets/5ae2d4ca-7a2c-40ea-a146-9ef1a38b96f7" />
 
 
-2. Create Snapshot
+2. **Create Snapshot**
 
-EC2 > Snapshots > Create snapshot > Select new volume > Create.
-Refresh to confirm.
+  - EC2 > Snapshots > Create snapshot > Select new volume > Create.
+  - Refresh to confirm.
 <img width="1908" height="891" alt="Screenshot 2025-10-13 105201" src="https://github.com/user-attachments/assets/f92db53e-5d0e-4fd4-bd29-f598317fa0ae" />
 
 
 
-3. Test Lambda
+3. **Test Lambda**
 
-Lambda > Test > Run.
-Logs: Success; snapshot deleted, volume persists (not attached).
+   - Lambda > Test > Run.
+   - Logs: Success; snapshot deleted, volume persists (not attached).
 <img width="1912" height="840" alt="Screenshot 2025-10-13 105259" src="https://github.com/user-attachments/assets/ea98b834-8554-4d77-a7fd-7dc5c85e2889" />
 <img width="1909" height="336" alt="Screenshot 2025-10-13 105431" src="https://github.com/user-attachments/assets/eab5af1d-9ed7-4ff3-bb40-d62ad44b29e6" />
 
@@ -245,7 +713,7 @@ Logs: Success; snapshot deleted, volume persists (not attached).
 
 
 
-Why: Code deletes snapshots tied to unattached volumes, leaving volumes intact.
+- Why: Code deletes snapshots tied to unattached volumes, leaving volumes intact.
 
 ## Scope and Extensions
 
@@ -262,12 +730,14 @@ Why: Code deletes snapshots tied to unattached volumes, leaving volumes intact.
 
 ## Credits
 
-- Inspired by Abhishek Veeramalla's AWS Cost Optimization series (single-instance focus).
-- Extended for multi-testing by [venkateswarluyendoti/Repo Contributor].
+- **Inspired** by **Abhishek Veeramalla's AWS Cost Optimization series** (single-instance focus).
+- **Extended** for **multi-testing** and **Terraform** by [venkateswarluyendoti/Repo Contributor].
 
 ## Repository Files
 
-- snapshot_cleaner.py: [Enhanced Lambda Code (snapshot_cleaner.py)].
+- snapshot_cleaner.py: Enhanced Lambda Script
+- snapshot_cleaner.zip: Terraform integration
+- terraform/main.tf: Terraform configuration
 - README.md: [AWS-Cost-Optimization-with-Lambda-Boto3].
 
 
