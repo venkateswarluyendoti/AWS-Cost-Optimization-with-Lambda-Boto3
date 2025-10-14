@@ -35,7 +35,7 @@ resource "aws_lambda_function" "cost_optimization" {
   handler       = "snapshot_cleaner.lambda_handler"
   runtime       = "python3.10"
   timeout       = 10
-  filename      = "./snapshot_cleaner.py"  # Updated to Current directory
+  filename      = "./snapshot_cleaner.py"  # Must be in terraform/ directory
   source_code_hash = filebase64sha256("./snapshot_cleaner.py")
 }
 
