@@ -35,8 +35,8 @@ resource "aws_lambda_function" "cost_optimization" {
   handler       = "snapshot_cleaner.lambda_handler"
   runtime       = "python3.10"
   timeout       = 10
-  filename      = "../snapshot_cleaner.py"  # Path to your Python file
-  source_code_hash = filebase64sha256("../snapshot_cleaner.py")
+  filename      = "./snapshot_cleaner.py"  # Updated to Current directory
+  source_code_hash = filebase64sha256("./snapshot_cleaner.py")
 }
 
 # EventBridge Trigger (Daily)
