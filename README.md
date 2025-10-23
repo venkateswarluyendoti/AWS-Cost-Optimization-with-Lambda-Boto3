@@ -1,6 +1,6 @@
 # AWS Cloud Cost Optimization - Identifying Stale Resources
 
-[![GitHub Repo](https://github.com/venkateswarluyendoti/aws-devops-zero-to-hero.git)
+[![GitHub Repo](https://github.com/venkateswarluyendoti/AWS-Cost-Optimization-with-Lambda-Boto3-Terraform.git)
 **Based on and extended from Abhishek Veeramalla's AWS Cost Optimization series.**  
 This project leverages **AWS Lambda and Boto3 to identify** and **delete stale EBS snapshots** (those not associated with active EC2 instances), optimizing storage costs (~$0.05/GB/month). The original approach by **Abhishek Veeramalla** focuses on testing with a **single instance** for simplicity. We’ve extended it to handle **multiple instances** (e.g., deleting 5 snapshots at once) to demonstrate **scalability and robustness**. Additionally, we’ve incorporated **Terraform to automate the provisioning of AWS resources, including Lambda functions, IAM roles, and EventBridge triggers, ensuring a reproducible and efficient setup for cost optimization**.
 
